@@ -1,0 +1,66 @@
+---
+title: "HW8"
+author: "Dani Freund"
+format: html
+editor: visual
+---
+
+```{r, include=FALSE, warning=FALSE, message=FALSE}
+library(ggthemes)
+library(osmdata)
+library(dplyr)
+library(forcats)
+library(gt)
+library(stringr)
+library(sf)
+library(ggplot2)
+library(ggmap)
+library(plotly)
+library(leaflet)
+library(purrr)
+library(tidycensus)
+library(kableExtra)
+library(flexdashboard)
+```
+
+```{r, include = FALSE, warning=FALSE, message=FALSE}
+# setting my census key
+api_key <- Sys.getenv("CENSUS_API_KEY")
+#Call the ACS API, returns a sf object
+mn_rent.df <- get_acs(
+  geography = "tract",
+  variables = "B25064_001", #Code for median groos rent
+  state     = "MN",
+  county    = "Hennepin",
+  year      = 2020,
+  geometry  = TRUE,
+  cb        = FALSE
+) 
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#Plot normally
+# rent.gg <- 
+#   mn_rent.df %>% 
+#   ggplot() + 
+#   geom_sf(data = mn_rent.df, aes(fill = estimate)) + 
+#   labs(title = "MN Gross Rent") + 
+#   theme_void() + 
+#   scale_fill_viridis_c("Median Gross Rent", labels = scales::dollar, option="C") +
+#   theme_map()
+# 
+# #Display
+# rent.gg
+
+# making a plot so the labels will be good for plotly
+mn_rent.df<-mn_rent.df %>% mutate(
+    text_label = str_c("\nRent: "  ,  scales::dollar(estimate)))
+rent.gg.2<-
+        ggplot() + 
+  geom_sf(data = mn_rent.df, aes(fill = estimate, text = text_label)) + 
+  labs(title = "MN Median Gross Rent") + 
+  scale_fill_viridis_c("Median Gross Rent", labels = scales::dollar, option="C") +
+  theme_map()
+
+ggplotly(rent.gg.2, tooltip="text") %>% style(hoveron = "fills")
+```
